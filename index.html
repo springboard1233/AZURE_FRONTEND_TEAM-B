@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azure Demand Forecasting Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #f3f4f6; }
+    .sidebar { transition: width 0.3s; }
+    .sidebar.collapsed { width: 80px; }
+    .sidebar.collapsed .sidebar-text { display: none; }
+    .sidebar.collapsed .logo-text { display: none; }
+    .chart-card { transition: all 0.3s ease; }
+    @media (max-width: 768px) {
+      .sidebar { width: 80px; }
+      .sidebar .sidebar-text { display: none; }
+      .main { padding: 10px; }
+      .chart-card { margin: 10px; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="flex">
+    <!-- Sidebar -->
+    <div class="sidebar bg-indigo-900 text-white h-screen p-5 fixed" id="sidebar">
+      <div class="flex items-center mb-8">
+        <svg class="h-8 w-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
+        <h2 class="text-xl font-bold logo-text">Azure Analytics</h2>
+      </div>
+      <ul class="space-y-2">
+        <li><a onclick="showSection('usage')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
+          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2v10"/></svg>
+          <span class="sidebar-text">Usage Trends</span>
+        </a></li>
+        <li><a onclick="showSection('factors')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
+          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V15h5.488"/></svg>
+          <span class="sidebar-text">External Factors</span>
+        </a></li>
+        <li><a onclick="showSection('reports')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
+          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span class="sidebar-text">Reports</span>
+        </a></li>
+      </ul>
+      <button onclick="toggleSidebar()" class="absolute bottom-5 left-5 p-2 rounded-full bg-indigo-700 hover:bg-indigo-600">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main flex-1 p-8 ml-64">
+      <h1 class="text-3xl font-bold text-gray-800 mb-8">Azure Demand Forecasting</h1>
+
+      <!-- Usage Section -->
+      <div id="usage" class="section">
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">CPU Usage Trends</h3>
+          <canvas id="cpuChart"></canvas>
+        </div>
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg">
+          <h3 class="text-lg font-semibold mb-4">Storage Usage Trends</h3>
+          <canvas id="storageChart"></canvas>
+        </div>
+      </div>
+
+      <!-- External Factors Section -->
+      <div id="factors" class="section hidden">
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Usage by Region</h3>
+          <canvas id="regionPie"></canvas>
+        </div>
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg">
+          <h3 class="text-lg font-semibold mb-4">Resource Type Demand</h3>
+          <canvas id="resourceRadar"></canvas>
+        </div>
+      </div>
+
+      <!-- Reports Section -->
+      <div id="reports" class="section hidden">
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
+          <table id="dataTable" class="w-full text-sm">
+            <thead class="bg-indigo-600 text-white"></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar Toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+      document.querySelector('.main').classList.toggle('ml-64');
+      document.querySelector('.main').classList.toggle('ml-20');
+    }
+
+    // Navigation
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    // Example merged dataset (replace with Flask API or static JSON)
+    const data = [
+      {Date:"2025-01-01", "CPU Usage":70, "Storage":300, Region:"US-East", ResourceType:"Compute"},
+      {Date:"2025-01-02", "CPU Usage":65, "Storage":280, Region:"US-West", ResourceType:"Storage"},
+      {Date:"2025-01-03", "CPU Usage":80, "Storage":350, Region:"Europe", ResourceType:"Compute"},
+      {Date:"2025-01-04", "CPU Usage":55, "Storage":250, Region:"Asia", ResourceType:"Networking"},
+      {Date:"2025-01-05", "CPU Usage":90, "Storage":400, Region:"US-East", ResourceType:"Storage"}
+    ];
+
+    const dates = data.map(d => d.Date);
+    const cpu = data.map(d => d["CPU Usage"]);
+    const storage = data.map(d => d["Storage"]);
+
+    // CPU Line Chart
+    new Chart(document.getElementById("cpuChart"), {
+      type: "line",
+      data: {
+        labels: dates,
+        datasets: [{
+          label: "CPU Usage %",
+          data: cpu,
+          borderColor: "#4f46e5",
+          backgroundColor: "rgba(79, 70, 229, 0.2)",
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } },
+        plugins: { legend: { display: true } }
+      }
+    });
+
+    // Storage Bar Chart
+    new Chart(document.getElementById("storageChart"), {
+      type: "bar",
+      data: {
+        labels: dates,
+        datasets: [{
+          label: "Storage (GB)",
+          data: storage,
+          backgroundColor: "#7c3aed",
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    // Pie Chart: Usage by Region
+    const regionGroups = {};
+    data.forEach(row => {
+      if(row.Region){
+        regionGroups[row.Region] = (regionGroups[row.Region] || 0) + row["CPU Usage"];
+      }
+    });
+    new Chart(document.getElementById("regionPie"), {
+      type: "pie",
+      data: {
+        labels: Object.keys(regionGroups),
+        datasets: [{
+          data: Object.values(regionGroups),
+          backgroundColor: ["#4f46e5", "#7c3aed", "#f59e0b", "#10b981", "#ec4899"]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+
+    // Radar Chart: Resource Type Demand
+    const resourceGroups = {};
+    data.forEach(row => {
+      if(row.ResourceType){
+        resourceGroups[row.ResourceType] = (resourceGroups[row.ResourceType] || 0) + row["Storage"];
+      }
+    });
+    new Chart(document.getElementById("resourceRadar"), {
+      type: "radar",
+      data: {
+        labels: Object.keys(resourceGroups),
+        datasets: [{
+          label: "Resource Usage (GB)",
+          data: Object.values(resourceGroups),
+          backgroundColor: "rgba(79, 70, 229, 0.3)",
+          borderColor: "#4f46e5",
+          pointBackgroundColor: "#4f46e5"
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { r: { beginAtZero: true } }
+      }
+    });
+
+    // Reports Table
+    const headers = Object.keys(data[0]);
+    document.querySelector("#dataTable thead").innerHTML =
+      "<tr>" + headers.map(h => `<th class="p-3">${h}</th>`).join("") + "</tr>";
+    document.querySelector("#dataTable tbody").innerHTML =
+      data.map(row => "<tr class='hover:bg-gray-100'>" + headers.map(h => `<td class="p-3">${row[h]}</td>`).join("") + "</tr>").join("");
+  </script>
+</body>
+</html>
+
+
+
