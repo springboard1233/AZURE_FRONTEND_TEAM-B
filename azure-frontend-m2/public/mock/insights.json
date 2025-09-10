@@ -1,0 +1,25 @@
+{
+  "peakTime": "2025-01-02 10:00",
+  "topRegions": [
+    {
+      "region": "East US",
+      "growthRate": 12
+    },
+    {
+      "region": "West EU",
+      "growthRate": 9
+    }
+  ],
+  "externalImpact": [
+    {
+      "date": "2025-01-01",
+      "economic_index": 101,
+      "usage_cpu": 500
+    },
+    {
+      "date": "2025-01-02",
+      "economic_index": 102,
+      "usage_cpu": 520
+    }
+  ]
+}
