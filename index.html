@@ -4,77 +4,179 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Azure Demand Forecasting Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #f3f4f6; }
-    .sidebar { transition: width 0.3s; }
+    .sidebar { transition: width 0.3s; background: #4f46e5; }
     .sidebar.collapsed { width: 80px; }
     .sidebar.collapsed .sidebar-text { display: none; }
     .sidebar.collapsed .logo-text { display: none; }
-    .chart-card { transition: all 0.3s ease; }
-    @media (max-width: 768px) {
-      .sidebar { width: 80px; }
-      .sidebar .sidebar-text { display: none; }
-      .main { padding: 10px; }
-      .chart-card { margin: 10px; }
+    .chart-card { transition: all 0.3s ease; background: white; border-radius: 1rem; }
+    .summary-card {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    canvas { max-height: 350px; }
+    .hidden { display: none; }
+    .sidebar-button {
+      display: flex;
+      align-items: center;
+      width: 180px; /* Rectangular shape */
+      height: 50px;
+      margin: 10px 0;
+      padding-left: 10px;
+      background: #6366f1;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .sidebar-button:hover {
+      background: #8b5cf6;
+    }
+    .sidebar-button span {
+      margin-left: 10px;
+      color: white;
     }
   </style>
 </head>
 <body class="min-h-screen">
   <div class="flex">
     <!-- Sidebar -->
-    <div class="sidebar bg-indigo-900 text-white h-screen p-5 fixed" id="sidebar">
+    <div class="sidebar text-white h-screen p-5 fixed" id="sidebar">
       <div class="flex items-center mb-8">
         <svg class="h-8 w-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
         <h2 class="text-xl font-bold logo-text">Azure Analytics</h2>
       </div>
-      <ul class="space-y-2">
-        <li><a onclick="showSection('usage')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
-          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2v10"/></svg>
-          <span class="sidebar-text">Usage Trends</span>
-        </a></li>
-        <li><a onclick="showSection('factors')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
-          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V15h5.488"/></svg>
-          <span class="sidebar-text">External Factors</span>
-        </a></li>
-        <li><a onclick="showSection('reports')" class="flex items-center p-2 rounded-lg hover:bg-indigo-800 cursor-pointer">
-          <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          <span class="sidebar-text">Reports</span>
-        </a></li>
-      </ul>
+      <div class="sidebar-button" onclick="showSection('usage')">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m-6 0h6" />
+        </svg>
+        <span class="sidebar-text">Usage Trends</span>
+      </div>
+      <div class="sidebar-button" onclick="showSection('forecast')">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="sidebar-text">Forecast</span>
+      </div>
+      <div class="sidebar-button" onclick="showSection('cost')">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+        </svg>
+        <span class="sidebar-text">Cost Estimation</span>
+      </div>
+      <div class="sidebar-button" onclick="showSection('insights')">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="sidebar-text">Insights</span>
+      </div>
+      <div class="sidebar-button" onclick="showSection('reports')">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V17a2 2 0 01-2 2z" />
+        </svg>
+        <span class="sidebar-text">Reports</span>
+      </div>
       <button onclick="toggleSidebar()" class="absolute bottom-5 left-5 p-2 rounded-full bg-indigo-700 hover:bg-indigo-600">
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
       </button>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <div class="main flex-1 p-8 ml-64">
       <h1 class="text-3xl font-bold text-gray-800 mb-8">Azure Demand Forecasting</h1>
 
-      <!-- Usage Section -->
-      <div id="usage" class="section">
-        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
-          <h3 class="text-lg font-semibold mb-4">CPU Usage Trends</h3>
-          <canvas id="cpuChart"></canvas>
+      <!-- Filters -->
+      <div class="mb-6 p-4 bg-white rounded-xl shadow-lg">
+        <label class="block mb-2"><strong>Date Range:</strong></label>
+        <input type="date" id="startDate" class="mr-2 p-2 border rounded">
+        <input type="date" id="endDate" class="p-2 border rounded">
+        <select id="regionFilter" class="ml-2 p-2 border rounded">
+          <option value="">All Regions</option>
+          <option value="East US">East US</option>
+          <option value="West US">West US</option>
+          <option value="North Europe">North Europe</option>
+          <option value="Southeast Asia">Southeast Asia</option>
+        </select>
+        <select id="resourceFilter" class="ml-2 p-2 border rounded">
+          <option value="">All Resource Types</option>
+          <option value="VM">VM</option>
+          <option value="Storage">Storage</option>
+          <option value="Container">Container</option>
+        </select>
+        <button onclick="filterData()" class="ml-2 p-2 bg-indigo-600 text-white rounded">Apply</button>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="summary-card mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <h3 class="text-sm font-semibold">Avg CPU Usage (%)</h3>
+          <p id="avgGpu" class="text-xl font-bold">--</p>
         </div>
-        <div class="chart-card bg-white p-6 rounded-xl shadow-lg">
-          <h3 class="text-lg font-semibold mb-4">Storage Usage Trends</h3>
-          <canvas id="storageChart"></canvas>
+        <div class="text-center">
+          <h3 class="text-sm font-semibold">Avg Storage (GB)</h3>
+          <p id="avgStorage" class="text-xl font-bold">--</p>
+        </div>
+        <div class="text-center">
+          <h3 class="text-sm font-semibold">Avg Active Users</h3>
+          <p id="totalUsers" class="text-xl font-bold">--</p>
+        </div>
+        <div class="text-center">
+          <h3 class="text-sm font-semibold">Total Regions</h3>
+          <p id="totalRegions" class="text-xl font-bold">--</p>
         </div>
       </div>
 
-      <!-- External Factors Section -->
-      <div id="factors" class="section hidden">
+      <!-- Usage Trends Section -->
+      <div id="usage" class="section">
         <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
-          <h3 class="text-lg font-semibold mb-4">Usage by Region</h3>
-          <canvas id="regionPie"></canvas>
+          <h3 class="text-lg font-semibold mb-4">CPU/Storage Usage Trends per Region</h3>
+          <canvas id="usageTrendChart"></canvas>
         </div>
-        <div class="chart-card bg-white p-6 rounded-xl shadow-lg">
-          <h3 class="text-lg font-semibold mb-4">Resource Type Demand</h3>
-          <canvas id="resourceRadar"></canvas>
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Comparison (Before vs After Feature Engineering)</h3>
+          <canvas id="comparisonChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Forecast Section -->
+      <div id="forecast" class="section hidden">
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Forecast vs Actual CPU Usage</h3>
+          <canvas id="forecastChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Cost Estimation Section -->
+      <div id="cost" class="section hidden">
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Cost Estimation Trend</h3>
+          <canvas id="costChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Insights Section -->
+      <div id="insights" class="section hidden">
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Peak Demand Times</h3>
+          <canvas id="peakDemandChart"></canvas>
+        </div>
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">Regions with Highest Growth</h3>
+          <canvas id="growthChart"></canvas>
+        </div>
+        <div class="chart-card bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h3 class="text-lg font-semibold mb-4">External Factors Impact</h3>
+          <canvas id="externalImpactChart"></canvas>
         </div>
       </div>
 
@@ -82,7 +184,7 @@
       <div id="reports" class="section hidden">
         <div class="bg-white p-6 rounded-xl shadow-lg">
           <h3 class="text-lg font-semibold mb-4">Detailed Reports</h3>
-          <table id="dataTable" class="w-full text-sm">
+          <table id="dataTable" class="w-full text-sm border">
             <thead class="bg-indigo-600 text-white"></thead>
             <tbody></tbody>
           </table>
@@ -92,7 +194,7 @@
   </div>
 
   <script>
-    // Sidebar Toggle
+    // Sidebar toggle
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       sidebar.classList.toggle('collapsed');
@@ -100,120 +202,256 @@
       document.querySelector('.main').classList.toggle('ml-20');
     }
 
-    // Navigation
+    // Section navigation
     function showSection(id) {
       document.querySelectorAll('.section').forEach(sec => sec.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
     }
 
-    // Example merged dataset (replace with Flask API or static JSON)
-    const data = [
-      {Date:"2025-01-01", "CPU Usage":70, "Storage":300, Region:"US-East", ResourceType:"Compute"},
-      {Date:"2025-01-02", "CPU Usage":65, "Storage":280, Region:"US-West", ResourceType:"Storage"},
-      {Date:"2025-01-03", "CPU Usage":80, "Storage":350, Region:"Europe", ResourceType:"Compute"},
-      {Date:"2025-01-04", "CPU Usage":55, "Storage":250, Region:"Asia", ResourceType:"Networking"},
-      {Date:"2025-01-05", "CPU Usage":90, "Storage":400, Region:"US-East", ResourceType:"Storage"}
-    ];
+    let charts = {};
+    window.allData = [];
 
-    const dates = data.map(d => d.Date);
-    const cpu = data.map(d => d["CPU Usage"]);
-    const storage = data.map(d => d["Storage"]);
+    // Destroy existing charts
+    function destroyCharts() {
+      Object.values(charts).forEach(chart => { if (chart) chart.destroy(); });
+      charts = {};
+    }
 
-    // CPU Line Chart
-    new Chart(document.getElementById("cpuChart"), {
-      type: "line",
-      data: {
-        labels: dates,
-        datasets: [{
-          label: "CPU Usage %",
-          data: cpu,
-          borderColor: "#4f46e5",
-          backgroundColor: "rgba(79, 70, 229, 0.2)",
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } },
-        plugins: { legend: { display: true } }
-      }
-    });
+    // Fetch data from Flask API
+    async function loadData() {
+      try {
+        let response = await fetch("http://127.0.0.1:5000/api/data");
+        let jsonData = await response.json();
 
-    // Storage Bar Chart
-    new Chart(document.getElementById("storageChart"), {
-      type: "bar",
-      data: {
-        labels: dates,
-        datasets: [{
-          label: "Storage (GB)",
-          data: storage,
-          backgroundColor: "#7c3aed",
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+        if (!Array.isArray(jsonData)) {
+          console.error("Data from backend is not an array:", jsonData);
+          return;
+        }
 
-    // Pie Chart: Usage by Region
-    const regionGroups = {};
-    data.forEach(row => {
-      if(row.Region){
-        regionGroups[row.Region] = (regionGroups[row.Region] || 0) + row["CPU Usage"];
-      }
-    });
-    new Chart(document.getElementById("regionPie"), {
-      type: "pie",
-      data: {
-        labels: Object.keys(regionGroups),
-        datasets: [{
-          data: Object.values(regionGroups),
-          backgroundColor: ["#4f46e5", "#7c3aed", "#f59e0b", "#10b981", "#ec4899"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom' } }
-      }
-    });
+        // Map backend data
+        let data = jsonData.map(d => ({
+          Date: d.date,
+          Region: d.Region,
+          ResourceType: d.ResourceType,
+          GPU: parseInt(d.usage_cpu || 0),
+          Storage: parseInt(d.usage_storage || 0),
+          Users: parseInt(d.users_active || 0),
+          Growth: parseFloat(d.cpu_utilization || 0),
+          Holiday: parseInt(d.power_outage_flag || 0),
+          ForecastCPU: parseFloat(d.forecast_cpu || d.usage_cpu * 1.1), // Placeholder: 10% increase
+          Cost: parseFloat(d.cost || (d.usage_cpu * 0.05 + d.usage_storage * 0.02)) // Placeholder: cost calculation
+        }));
 
-    // Radar Chart: Resource Type Demand
-    const resourceGroups = {};
-    data.forEach(row => {
-      if(row.ResourceType){
-        resourceGroups[row.ResourceType] = (resourceGroups[row.ResourceType] || 0) + row["Storage"];
-      }
-    });
-    new Chart(document.getElementById("resourceRadar"), {
-      type: "radar",
-      data: {
-        labels: Object.keys(resourceGroups),
-        datasets: [{
-          label: "Resource Usage (GB)",
-          data: Object.values(resourceGroups),
-          backgroundColor: "rgba(79, 70, 229, 0.3)",
-          borderColor: "#4f46e5",
-          pointBackgroundColor: "#4f46e5"
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: { r: { beginAtZero: true } }
-      }
-    });
+        data.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        window.allData = data;
 
-    // Reports Table
-    const headers = Object.keys(data[0]);
-    document.querySelector("#dataTable thead").innerHTML =
-      "<tr>" + headers.map(h => `<th class="p-3">${h}</th>`).join("") + "</tr>";
-    document.querySelector("#dataTable tbody").innerHTML =
-      data.map(row => "<tr class='hover:bg-gray-100'>" + headers.map(h => `<td class="p-3">${row[h]}</td>`).join("") + "</tr>").join("");
+        filterData(); // Load initial data
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      }
+    }
+
+    // Filter data
+    function filterData() {
+      let data = [...window.allData];
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const region = document.getElementById('regionFilter').value;
+      const resource = document.getElementById('resourceFilter').value;
+
+      // Date filter
+      if (startDate || endDate) {
+        data = data.filter(d => {
+          const rowDate = new Date(d.Date);
+          return (!startDate || rowDate >= new Date(startDate)) &&
+                 (!endDate || rowDate <= new Date(endDate));
+        });
+      }
+
+      // Region filter
+      if (region) {
+        data = data.filter(d => d.Region.toLowerCase() === region.toLowerCase());
+      }
+
+      // Resource filter
+      if (resource) {
+        data = data.filter(d => d.ResourceType.toLowerCase() === resource.toLowerCase());
+      }
+
+      destroyCharts(); // Reset charts
+      updateCharts(data);
+      updateKPIs(data);
+      updateTable(data);
+    }
+
+    // Chart gradient helper
+    function createGradient(ctx, color1, color2) {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(1, color2);
+      return gradient;
+    }
+
+    // Update KPI cards
+    function updateKPIs(data) {
+      document.getElementById("avgGpu").textContent = (data.reduce((a, b) => a + b.GPU, 0) / data.length || 0).toFixed(2);
+      document.getElementById("avgStorage").textContent = (data.reduce((a, b) => a + b.Storage, 0) / data.length || 0).toFixed(2);
+      document.getElementById("totalUsers").textContent = (data.reduce((a, b) => a + b.Users, 0) / data.length || 0).toFixed(2);
+      document.getElementById("totalRegions").textContent = new Set(data.map(d => d.Region)).size;
+    }
+
+    // Update charts
+    function updateCharts(data) {
+      const dates = [...new Set(data.map(d => d.Date))].sort();
+
+      // === Usage Trend Chart ===
+      const gpuPerDate = dates.map(date => {
+        const dayData = data.filter(d => d.Date === date);
+        return dayData.reduce((sum, d) => sum + d.GPU, 0) / dayData.length || 0;
+      });
+      const storagePerDate = dates.map(date => {
+        const dayData = data.filter(d => d.Date === date);
+        return dayData.reduce((sum, d) => sum + d.Storage, 0) / dayData.length || 0;
+      });
+      const usageTrendCtx = document.getElementById("usageTrendChart").getContext("2d");
+      charts.usageTrend = new Chart(usageTrendCtx, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: "Avg CPU Usage (%)",
+              data: gpuPerDate,
+              borderColor: "#4f46e5",
+              backgroundColor: createGradient(usageTrendCtx, "rgba(79,70,229,0.4)", "rgba(124,58,237,0)"),
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5
+            },
+            {
+              label: "Avg Storage (GB)",
+              data: storagePerDate,
+              borderColor: "#7c3aed",
+              backgroundColor: createGradient(usageTrendCtx, "rgba(124,58,237,0.4)", "rgba(192,132,252,0)"),
+              fill: true,
+              tension: 0.4,
+              pointRadius: 5
+            }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { tooltip: { enabled: true } } }
+      });
+
+      // === Comparison Chart ===
+      const comparisonCtx = document.getElementById("comparisonChart").getContext("2d");
+      charts.comparison = new Chart(comparisonCtx, {
+        type: "bar",
+        data: {
+          labels: ["CPU", "Storage", "Users"],
+          datasets: [
+            {
+              label: "Before Feature Eng.",
+              data: [100, 100, 100], // Placeholder
+              backgroundColor: ["#4f46e5", "#7c3aed", "#a78bfa"]
+            },
+            {
+              label: "After Feature Eng.",
+              data: [
+                data.reduce((a, b) => a + b.GPU, 0) / data.length || 0,
+                data.reduce((a, b) => a + b.Storage, 0) / data.length || 0,
+                data.reduce((a, b) => a + b.Users, 0) / data.length || 0
+              ],
+              backgroundColor: ["#6366f1", "#8b5cf6", "#c4b5fd"]
+            }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+      });
+
+      // === Peak Demand Times ===
+      const peakHours = dates.map(date => {
+        const dayData = data.filter(d => d.Date === date);
+        return dayData.reduce((sum, d) => sum + d.GPU, 0) / dayData.length || 0;
+      });
+      const peakCtx = document.getElementById("peakDemandChart").getContext("2d");
+      charts.peakDemand = new Chart(peakCtx, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [
+            { label: "Peak CPU Usage", data: peakHours, borderColor: "#f59e0b", fill: false, tension: 0.3 }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+
+      // === Regions with Highest Growth ===
+      const regionGrowthMap = {};
+      data.forEach(d => { regionGrowthMap[d.Region] = (regionGrowthMap[d.Region] || 0) + d.Growth; });
+      const regions = Object.keys(regionGrowthMap);
+      const growthValues = Object.values(regionGrowthMap);
+      const growthCtx = document.getElementById("growthChart").getContext("2d");
+      charts.growth = new Chart(growthCtx, {
+        type: "bar",
+        data: {
+          labels: regions,
+          datasets: [
+            { label: "Total Growth", data: growthValues, backgroundColor: "#10b981" }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // === External Factors Impact ===
+      const externalImpactCtx = document.getElementById("externalImpactChart").getContext("2d");
+      const impactValues = data.map(d => d.Holiday); // Power outage / holiday as impact
+      charts.externalImpact = new Chart(externalImpactCtx, {
+        type: "bar",
+        data: {
+          labels: dates,
+          datasets: [
+            { label: "Holiday / Power Outage", data: impactValues, backgroundColor: "#f87171" }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // === Forecast Chart ===
+      const forecastCtx = document.getElementById("forecastChart").getContext("2d");
+      charts.forecast = new Chart(forecastCtx, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [
+            { label: "Actual CPU", data: data.map(d => d.GPU), borderColor: "#2563eb", fill: false },
+            { label: "Forecast CPU", data: data.map(d => d.ForecastCPU), borderColor: "#f43f5e", borderDash: [5, 5], fill: false }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+
+      // === Cost Estimation Chart ===
+      const costCtx = document.getElementById("costChart").getContext("2d");
+      charts.cost = new Chart(costCtx, {
+        type: "line",
+        data: {
+          labels: dates,
+          datasets: [
+            { label: "Estimated Cost ($)", data: data.map(d => d.Cost), borderColor: "#10b981", fill: true }
+          ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    // Update table
+    function updateTable(data) {
+      const headers = ["Date", "Region", "ResourceType", "GPU", "Storage", "Users", "Growth", "Holiday", "ForecastCPU", "Cost"];
+      document.querySelector("#dataTable thead").innerHTML = "<tr>" + headers.map(h => `<th class='p-3 border'>${h}</th>`).join("") + "</tr>";
+      document.querySelector("#dataTable tbody").innerHTML = data.map(row => "<tr class='hover:bg-gray-100'>" + headers.map(h => `<td class='p-3 border'>${row[h] || ''}</td>`).join("") + "</tr>").join("");
+    }
+
+    window.onload = loadData;
   </script>
 </body>
 </html>
-
-
-
