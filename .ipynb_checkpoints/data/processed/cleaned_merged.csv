@@ -1,0 +1,4 @@
+date,region,resource_type,usage_cpu,usage_storage,users_active,economic_index,cloud_market_demand,holiday
+2023-01-01,East US,VM,75,1200,320,104.97,0.99,1
+2023-01-02,West US,VM,60,1500,280,106.48,1.15,0
+2023-01-03,East US,Storage,50,800,150,97.66,0.98,0
