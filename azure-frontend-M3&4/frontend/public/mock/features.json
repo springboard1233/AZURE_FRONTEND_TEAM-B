@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2025-01-01",
+    "region": "East US",
+    "usage_cpu": 50,
+    "usage_storage": 120,
+    "active_users": 1000,
+    "cpu_lag_1": 45,
+    "storage_ma_7": 118
+  },
+  {
+    "date": "2025-01-02",
+    "region": "East US",
+    "usage_cpu": 60,
+    "usage_storage": 125,
+    "active_users": 1020,
+    "cpu_lag_1": 50,
+    "storage_ma_7": 119
+  }
+]

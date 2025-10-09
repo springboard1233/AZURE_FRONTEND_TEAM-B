@@ -1,0 +1,8 @@
+Starting debug test...
+Pandas imported successfully
+Data loaded: 1080 rows
+Columns: ['date', 'region', 'resource_type', 'usage_cpu', 'usage_storage', 'users_active', 'economic_index', 'cloud_market_demand', 'holiday']
+Flask imported successfully
+Flask-CORS imported successfully
+Flask app created successfully
+All imports and data loading successful!
